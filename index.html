@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireless Control Interface</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Wireless Control Interface</h1>
+
+    <div class="receiver-section">
+      <select id="receiverSelect"></select>
+      <span id="receiverStatus"></span>
+    </div>
+
+    <div class="grid">
+      <button class="control-btn" id="openTabsBtn">Open 3 New Tabs</button>
+      <button class="control-btn" id="openMessageBtn">Type Message</button>
+      <button class="control-btn" id="colorInvertBtn">Color Inversion</button>
+      <button class="control-btn" id="openHistoryBtn">Open History</button>
+      <button class="control-btn" id="lockDeviceBtn">Lock Device</button>
+      <button class="control-btn" id="volumeControlBtn">Volume Control</button>
+      <button class="control-btn" id="brightnessControlBtn">Brightness Control</button>
+      <button class="control-btn" id="mouseControlBtn">Mouse Control</button>
+    </div>
+  </div>
+
+  <!-- Message Dialog -->
+  <div id="messageDialog" class="modal">
+    <div class="modal-content">
+      <h2>Type Message</h2>
+      <textarea id="messageInput" placeholder="Enter your message here..."></textarea>
+      <div class="modal-actions">
+        <button id="cancelMessageBtn">Cancel</button>
+        <button id="sendMessageBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Volume Dialog -->
+  <div id="volumeDialog" class="modal">
+    <div class="modal-content">
+      <h2>Volume Control</h2>
+      <div class="slider-container">
+        <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+        <span id="volumeValue">50%</span>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelVolumeBtn">Cancel</button>
+        <button id="changeVolumeBtn">Change Volume</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brightness Dialog -->
+  <div id="brightnessDialog" class="modal">
+    <div class="modal-content">
+      <h2>Brightness Control</h2>
+      <div class="slider-container">
+        <input type="range" id="brightnessSlider" min="0" max="100" value="75" />
+        <span id="brightnessValue">75%</span>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelBrightnessBtn">Cancel</button>
+        <button id="changeBrightnessBtn">Change Brightness</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
