@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mouse Control</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Specific styles for the mouse control page */
+    .mouse-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .mouse-canvas {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 400px;
+      touch-action: none;
+    }
+    .back-btn {
+      margin-bottom: 20px;
+    }
+    .click-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="mouse-container">
+    <button class="back-btn" id="backBtn">← Back</button>
+    <h1>Mouse Control</h1>
+    <div id="desktopInfo">
+      <p>Press SPACE to toggle control</p>
+      <p>Status: <span id="controlStatus" class="status-disconnected">Not Controlling</span></p>
+    </div>
+    <canvas id="mouseCanvas" class="mouse-canvas"></canvas>
+    <div id="mobileButtons" class="click-buttons" style="display: none;">
+      <button id="leftClickBtn">Left Click</button>
+      <button id="rightClickBtn">Right Click</button>
+    </div>
+    <div class="instructions">
+      <p><strong>Desktop:</strong> Press SPACE to toggle control mode. When controlling, your mouse movements and clicks will be sent to the receiver.</p>
+      <p><strong>Mobile:</strong> Drag on the canvas to move the cursor. Use the buttons below to send clicks.</p>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <script>
+    // Helper to show toast notifications
+    function showToast(title, description) {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `<strong>${title}</strong><p>${description}</p>`;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Simple mobile detection
+    function isMobile() {
+      return (
+        window.innerWidth < 768 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      );
+    }
+
+    const canvas = document.getElementById("mouseCanvas");
+    const ctx = canvas.getContext("2d");
+    let isControlling = false;
+    const controlStatus = document.getElementById("controlStatus");
+    let lastPosition = { x: 0, y: 0 };
+    let cursorPosition = { x: canvas.width / 2, y: canvas.height / 2 };
+
+    // Update canvas size and initialize cursor position
+    function updateCanvasSize() {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      cursorPosition = { x: canvas.width / 2, y: canvas.height / 2 };
+      drawCursor();
+    }
+    updateCanvasSize();
+    window.addEventListener("resize", updateCanvasSize);
+
+    function drawCursor() {
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Black circle cursor
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(cursorPosition.x, cursorPosition.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        // White pointer
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(cursorPosition.x, cursorPosition.y - 5);
+        ctx.lineTo(cursorPosition.x + 7, cursorPosition.y + 7);
+        ctx.lineTo(cursorPosition.x - 7, cursorPosition.y + 7);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // Desktop events
+    if (!isMobile()) {
+      window.addEventListener("keydown", function (e) {
+        if (e.code === "Space") {
+          isControlling = !isControlling;
+          controlStatus.textContent = isControlling ? "Controlling" : "Not Controlling";
+          controlStatus.className = isControlling ? "status-connected" : "status-disconnected";
+          canvas.style.cursor = isControlling ? "none" : "default";
+        }
+      });
+
+      window.addEventListener("mousemove", function (e) {
+        if (isControlling) {
+          const dx = e.movementX;
+          const dy = e.movementY;
+          console.log(`Mouse moved: dx=${dx}, dy=${dy}`);
+        }
+      });
+
+      window.addEventListener("mousedown", function (e) {
+        if (isControlling) {
+          const btn = e.button === 0 ? "Left" : e.button === 2 ? "Right" : "Middle";
+          console.log(`Mouse button ${e.button} down`);
+          showToast("Mouse Button Down", `Button ${btn} pressed`);
+        }
+      });
+
+      window.addEventListener("mouseup", function (e) {
+        if (isControlling) {
+          console.log(`Mouse button ${e.button} up`);
+        }
+      });
+    } else {
+      // Mobile touch events
+      canvas.addEventListener("touchstart", function (e) {
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          const rect = canvas.getBoundingClientRect();
+          lastPosition = {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+          };
+        }
+      });
+
+      canvas.addEventListener("touchmove", function (e) {
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          const rect = canvas.getBoundingClientRect();
+          const currentX = touch.clientX - rect.left;
+          const currentY = touch.clientY - rect.top;
+          const dx = currentX - lastPosition.x;
+          const dy = currentY - lastPosition.y;
+          cursorPosition.x = Math.max(0, Math.min(rect.width, cursorPosition.x + dx));
+          cursorPosition.y = Math.max(0, Math.min(rect.height, cursorPosition.y + dy));
+          drawCursor();
+          if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+            showToast("Mouse Movement Sent", `Movement: x=${Math.round(dx)}, y=${Math.round(dy)}`);
+          }
+          lastPosition = { x: currentX, y: currentY };
+        }
+      });
+    }
+
+    // Mobile click buttons
+    if (isMobile()) {
+      document.getElementById("mobileButtons").style.display = "grid";
+      document.getElementById("desktopInfo").style.display = "none";
+      document.getElementById("leftClickBtn").addEventListener("click", function () {
+        console.log("Sending left click to receiver");
+        showToast("Mouse Click Sent", "Left click sent to receiver");
+      });
+      document.getElementById("rightClickBtn").addEventListener("click", function () {
+        console.log("Sending right click to receiver");
+        showToast("Mouse Click Sent", "Right click sent to receiver");
+      });
+    }
+
+    // Back button navigation
+    document.getElementById("backBtn").addEventListener("click", function () {
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
